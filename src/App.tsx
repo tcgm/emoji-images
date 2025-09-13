@@ -107,43 +107,61 @@ export default function App() {
     };
 
     return (
-        <Container maxW="6xl" py={4}>
-            <Flex gap={6} align="flex-start" wrap="wrap">
-                <PreviewCard
-                    canvasRef={previewRef}
-                    version={meta?.sequencesVersion}
-                    date={meta?.sequencesDate}
-                    sequencesCount={meta?.sequencesCount}
-                    supplementCount={meta?.supplementCount}
-                    totalCount={totalCount}
-                />
-                <Box flex="1">
-                    <Toolbar
-                        query={query} setQuery={setQuery}
-                        canvasSize={canvasSize} setCanvasSize={setCanvasSize}
-                        fontSize={fontSize} setFontSize={setFontSize}
-                        yOffset={yOffset} setYOffset={setYOffset}
-                        glyphColor={glyphColor} setGlyphColor={setGlyphColor}
-                        onShuffle={onShuffle}
-                        onSelectAllFiltered={onSelectAllFiltered}
-                        onClearSelection={clear}
-                        onDownloadSelected={onDownloadSelected}
-                        onDownloadFiltered={onDownloadFiltered}
-                        filteredCount={filtered.length}
-                        selectedCount={selected.size}
-                        busy={busy}
-                    />
-                    {busy && <Progress mt={3} size="sm" value={progress * 100} colorScheme="purple" />}
-                    <EmojiGrid
-                        items={filtered}
-                        selectedSet={selected}
-                        onCellClick={onCellClick}
-                        glyphColor={glyphColor}
-                        fontFamily={fontFamily}
-                    />
-                </Box>
-            </Flex>
-            <canvas ref={offscreenRef} style={{ display: "none" }} />
-        </Container>
+        <Box h="100vh">                                   {/* 1. full screen */}
+            <Container maxW="6xl" h="100%" py={4}>          {/* 2. fill height */}
+                <Flex direction="column" h="100%" minH="0" gap={3}>
+                    <Flex gap={6} align="flex-start" flex="1" minH="0" flexWrap="nowrap">
+                        {/* Left: fixed preview */}
+                        <Box flexShrink={0}>
+                            <PreviewCard
+                                canvasRef={previewRef}
+                                version={meta?.sequencesVersion}
+                                date={meta?.sequencesDate}
+                                sequencesCount={meta?.sequencesCount}
+                                supplementCount={meta?.supplementCount}
+                                totalCount={totalCount}
+                            />
+                        </Box>
+
+                        {/* Right: toolbar (auto height) + grid (fills & scrolls) */}
+                        <Flex direction="column" flex="1" minH="0" minW="0" overflow="hidden">
+                            <Toolbar
+                                query={query} setQuery={setQuery}
+                                canvasSize={canvasSize} setCanvasSize={setCanvasSize}
+                                fontSize={fontSize} setFontSize={setFontSize}
+                                yOffset={yOffset} setYOffset={setYOffset}
+                                glyphColor={glyphColor} setGlyphColor={setGlyphColor}
+                                onShuffle={onShuffle}
+                                onSelectAllFiltered={() => selectAll(filtered.map(f => f.filename))}
+                                onClearSelection={clear}
+                                onDownloadSelected={onDownloadSelected}
+                                onDownloadFiltered={() => makeZipFrom(filtered)}
+                                filteredCount={filtered.length}
+                                selectedCount={selected.size}
+                                busy={busy}
+                            />
+                            {busy && (
+                                <Progress mt={3} size="sm" value={progress * 100} colorScheme="purple" />
+                            )}
+
+                            {/* This Box owns the scrolling space */}
+                            <Box flex="1" minH="0" minW="0" mt={3} overflow="hidden">
+                                <EmojiGrid
+                                    items={filtered}
+                                    selectedSet={selected}
+                                    onCellClick={onCellClick}
+                                    glyphColor={glyphColor}
+                                    fontFamily={fontFamily}
+                                />
+                            </Box>
+                        </Flex>
+                    </Flex>
+
+                    <canvas ref={offscreenRef} style={{ display: "none" }} />
+                </Flex>
+            </Container>
+        </Box>
     );
+
+
 }

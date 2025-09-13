@@ -1,17 +1,17 @@
-:root {
-    color-scheme: dark;
-}
-
-* {
-    box-sizing: border-box;
+html,
+body,
+#root {
+    height: 100%;
 }
 
 body {
     margin: 0;
+    overflow: hidden;
+    /* page never scrolls */
     font-family: system-ui, sans-serif;
 }
 
-/* When you add the TTF to /public/fonts: */
+/* keep your font-face here too */
 @font-face {
     font-family: 'OpenMojiBlack';
     src: url('/fonts/OpenMoji-Black.ttf') format('truetype');
