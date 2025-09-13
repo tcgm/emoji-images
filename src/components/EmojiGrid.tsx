@@ -33,31 +33,8 @@ function CellComponent(props: CellComponentProps) {
     const idx = rowIndex * columns + columnIndex;
     if (idx >= slice.length) return null;
     const it = slice[idx];
-    if (it.type === "openmoji") {
-        return (
-            <div style={style} key={it.filename}>
-                <EmojiCell
-                    char={it.char || ""}
-                    filename={it.filename || it.name}
-                    selected={selectedSet.has(it.filename || it.name)}
-                    onClick={(e) => onCellClick(idx, e)}
-                    glyphColor={glyphColor}
-                    fontFamily="OpenMojiBlack, system-ui, sans-serif"
-                    cellSize={cellSize}
-                />
-            </div>
-        );
-    } else if (it.type === "fontawesome" || it.type === "react-icons") {
-        const logPrefix = `[EmojiGrid Render]`;
-        if (!it.iconComponent) {
-            console.warn(`${logPrefix} Missing iconComponent for`, it.name, it);
-            return null;
-        }
-        if (typeof it.iconComponent !== "function") {
-            console.warn(`${logPrefix} iconComponent is not a function for`, it.name, it.iconComponent);
-            return null;
-        }
-        let rendered: React.ReactElement | null = null;
+    let iconComponent: React.ReactElement | null = null;
+    if (it.iconComponent && (it.type === "fontawesome" || it.type === "react-icons")) {
         try {
             const result = it.iconComponent({});
             if (
@@ -66,36 +43,29 @@ function CellComponent(props: CellComponentProps) {
                 "type" in result &&
                 (typeof result.type === "function" || typeof result.type === "string")
             ) {
-                rendered = result as React.ReactElement;
-            } else {
-                console.warn(`${logPrefix} Render result not a valid React element:`, it.name, result);
-                return null;
+                iconComponent = result as React.ReactElement;
             }
         } catch (e) {
-            console.error(`${logPrefix} Error rendering icon`, it.name, e);
-            return null;
+            iconComponent = null;
         }
-        return (
-            <div style={style} key={it.name}>
-                <Box
-                    as="button"
-                    title={it.name}
-                    onClick={(e) => onCellClick(idx, e)}
-                    w={`${cellSize}px`}
-                    h={`${cellSize}px`}
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    fontSize={`${Math.max(24, Math.round(cellSize * 0.6))}px`}
-                    color={glyphColor}
-                >
-                    {rendered}
-                </Box>
-            </div>
-        );
-    } else {
-        return null;
     }
+    return (
+        <div style={style} key={it.filename || it.name}>
+            <EmojiCell
+                char={it.char || ""}
+                iconComponent={iconComponent}
+                filename={it.filename || it.name}
+                selected={selectedSet.has(it.filename || it.name)}
+                onClick={(e) => onCellClick(idx, e)}
+                glyphColor={glyphColor}
+                fontFamily="OpenMojiBlack, system-ui, sans-serif"
+                cellSize={cellSize}
+                name={it.name}
+                type={it.type}
+                keywords={it.keywords}
+            />
+        </div>
+    );
 }
 
 const EmojiGrid = ({

@@ -51,10 +51,13 @@ export default function App() {
         if (e.shiftKey && lastIndex() !== null) {
             // Shift: select range
             rangeAdd(lastIndex()!, index, keys);
+            rememberIndex(index);
+            setDemo(filtered[index].char || ""); // Show in preview
         } else if (e.ctrlKey || e.metaKey) {
             // Ctrl/Cmd: toggle only clicked
             toggle(clickedKey);
             rememberIndex(index);
+            setDemo(filtered[index].char || ""); // Show in preview
         } else {
             // Single click: select only clicked, deselect others
             setSelected(new Set([clickedKey]));
