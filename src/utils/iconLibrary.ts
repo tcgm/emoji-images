@@ -6,7 +6,7 @@ import * as brandsIcons from "@fortawesome/free-brands-svg-icons";
 // import * as gameIcons from "react-game-icons";
 import * as faIcons from "react-icons/fa";
 import * as mdIcons from "react-icons/md";
-// import * as giIcons from "react-icons/gi";
+import * as giIcons from "react-icons/gi";
 import * as aiIcons from "react-icons/ai";
 import * as ioIcons from "react-icons/io";
 import * as tiIcons from "react-icons/ti";
@@ -39,7 +39,7 @@ const extractFAIcons = (iconSet: any, type: IconType, prefix: string): IconItem[
             const icon = iconSet[key];
             return {
                 type,
-                name: `${prefix}-${key}`,
+                name: `fa-source-${prefix}-${key}`,
                 keywords: [key],
                 iconComponent: icon,
             };
@@ -64,19 +64,19 @@ const extractFAIcons = (iconSet: any, type: IconType, prefix: string): IconItem[
 // Helper to extract React-Icons from multiple sub-packages
 const extractReactIcons = (): IconItem[] => {
     const allIconSets = [
-        { set: faIcons, prefix: "fa" },
-        { set: mdIcons, prefix: "md" },
-        // { set: giIcons, prefix: "gi" },
-        { set: aiIcons, prefix: "ai" },
-        { set: ioIcons, prefix: "io" },
-        { set: tiIcons, prefix: "ti" },
-        { set: goIcons, prefix: "go" },
-        { set: fiIcons, prefix: "fi" },
-        { set: bsIcons, prefix: "bs" },
-        { set: riIcons, prefix: "ri" },
-        { set: cgIcons, prefix: "cg" },
-        { set: biIcons, prefix: "bi" },
-        { set: siIcons, prefix: "si" },
+        { set: faIcons, prefix: "react-fa" },
+        { set: mdIcons, prefix: "react-md" },
+        { set: giIcons, prefix: "react-gi" },
+        { set: aiIcons, prefix: "react-ai" },
+        { set: ioIcons, prefix: "react-io" },
+        { set: tiIcons, prefix: "react-ti" },
+        { set: goIcons, prefix: "react-go" },
+        { set: fiIcons, prefix: "react-fi" },
+        { set: bsIcons, prefix: "react-bs" },
+        { set: riIcons, prefix: "react-ri" },
+        { set: cgIcons, prefix: "react-cg" },
+        { set: biIcons, prefix: "react-bi" },
+        { set: siIcons, prefix: "react-si" },
     ];
     const icons: IconItem[] = [];
     allIconSets.forEach(({ set, prefix }) => {

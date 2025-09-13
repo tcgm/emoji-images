@@ -27,6 +27,7 @@
     "@fortawesome/free-brands-svg-icons": "^7.0.1",
     "@fortawesome/free-regular-svg-icons": "^7.0.1",
     "@fortawesome/free-solid-svg-icons": "^7.0.1",
+    "canvg": "^4.0.3",
     "framer-motion": "^12.23.12",
     "html2canvas": "^1.4.1",
     "jszip": "^3.10.1",

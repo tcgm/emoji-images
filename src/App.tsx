@@ -32,9 +32,10 @@ export default function App() {
     const [query, setQuery] = useState("");
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
-        if (!q) return allIcons;
+        if (!q) return allIcons.filter(it => !!it && typeof it === "object" && it.name);
         const tokens = q.split(/\s+/g).filter(Boolean);
         return allIcons.filter((it) =>
+            !!it && typeof it === "object" && it.name &&
             tokens.every((t) =>
                 it.name.toLowerCase().includes(t) ||
                 (it.keywords && it.keywords.some(k => k.toLowerCase().includes(t))) ||
@@ -42,6 +43,21 @@ export default function App() {
             )
         );
     }, [allIcons, query]);
+
+    // Verify all indexes in filtered are real
+    if (typeof window !== "undefined") {
+        const invalidIndexes = filtered.map((it, idx) => it ? null : idx).filter(idx => idx !== null);
+        if (invalidIndexes.length > 0) {
+            console.warn("Invalid indexes in filtered:", invalidIndexes);
+        }
+    }
+    // Debug: log any empty or invalid items
+    if (typeof window !== "undefined") {
+        const invalids = filtered.filter(it => !it || typeof it !== "object" || !it.name);
+        if (invalids.length > 0) {
+            console.warn("Filtered contains invalid items:", invalids);
+        }
+    }
 
     // Selection
     const { selected, toggle, rangeAdd, rememberIndex, lastIndex, clear, selectAll, setSelected } = useSelection();
@@ -52,18 +68,17 @@ export default function App() {
             // Shift: select range
             rangeAdd(lastIndex()!, index, keys);
             rememberIndex(index);
-            setDemo(filtered[index].char || ""); // Show in preview
         } else if (e.ctrlKey || e.metaKey) {
             // Ctrl/Cmd: toggle only clicked
             toggle(clickedKey);
             rememberIndex(index);
-            setDemo(filtered[index].char || ""); // Show in preview
         } else {
             // Single click: select only clicked, deselect others
             setSelected(new Set([clickedKey]));
             rememberIndex(index);
-            setDemo(filtered[index].char || ""); // Show in preview
         }
+        // Always update preview to selected item, regardless of type
+        setDemo(clickedKey);
     };
 
     // Preview
@@ -73,18 +88,41 @@ export default function App() {
     const drawPreview = useCallback(async () => {
         if (!previewRef.current) return;
         const previewFontSize = Math.round(canvasSize * 0.8);
-        // Find the demo icon in filtered
-        const icon = filtered.find(i => i.char === demo || i.name === demo);
-        if (icon && icon.iconComponent) {
-            await drawIconToCanvas(previewRef.current, icon.iconComponent, canvasSize, glyphColor);
+        // Find the demo icon in allIcons by key (filename or name)
+        const icon = allIcons.find(i => (i.filename || i.name) === demo || i.char === demo);
+        if (icon) {
+            if (icon.iconComponent) {
+                // Render SVG icon instantly
+                await drawIconToCanvas(previewRef.current, icon.iconComponent, canvasSize, glyphColor);
+            } else if (icon.char) {
+                await ensureFont(fontFamily, previewFontSize);
+                drawEmojiToCanvas(
+                    previewRef.current, canvasSize, icon.char, previewFontSize, yOffset, fontFamily, glyphColor
+                );
+            } else if (icon.filename) {
+                // If it's an image file, load and draw it
+                const ctx = previewRef.current.getContext("2d");
+                if (ctx) {
+                    const img = new window.Image();
+                    img.onload = function () {
+                        ctx.clearRect(0, 0, canvasSize, canvasSize);
+                        ctx.drawImage(img, 0, 0, canvasSize, canvasSize);
+                    };
+                    img.src = `/imgs/${icon.filename}`;
+                }
+            }
         } else {
+            // fallback: try to render demo as char
             await ensureFont(fontFamily, previewFontSize);
             drawEmojiToCanvas(
                 previewRef.current, canvasSize, demo, previewFontSize, yOffset, fontFamily, glyphColor
             );
         }
-    }, [canvasSize, demo, ensureFont, fontFamily, glyphColor, yOffset, filtered]);
+    }, [canvasSize, demo, ensureFont, fontFamily, glyphColor, yOffset, allIcons]);
     useEffect(() => { void drawPreview(); }, [drawPreview]);
+
+    // Ensure demo is always valid after filtering
+    // Removed effect that clears preview on filter change. Preview only updates on selection.
 
     // Downloads
     const [busy, setBusy] = useState(false);
@@ -100,19 +138,21 @@ export default function App() {
         const batch = 120;
         const blobs: Array<{ name: string; blob: Blob }> = [];
 
-        for (let i = 0; i < source.length; i += batch) {
-            const part = source.slice(i, i + batch);
-            await Promise.all(part.map(async (it) => {
-                if (it.iconComponent) {
-                    await drawIconToCanvas(off, it.iconComponent, canvasSize, glyphColor);
-                } else {
-                    await ensureFont(fontFamily, fontSize);
-                    drawEmojiToCanvas(off, canvasSize, it.char, fontSize, yOffset, fontFamily, glyphColor);
-                }
-                const blob = await new Promise<Blob>((res) => off.toBlob((b) => res(b as Blob), "image/png"));
-                blobs.push({ name: it.filename || it.name, blob });
-            }));
-            setProgress(Math.min(1, (i + part.length) / source.length));
+        for (let i = 0; i < source.length; i++) {
+            const it = source[i];
+            if (it.iconComponent) {
+                await drawIconToCanvas(off, it.iconComponent, canvasSize, glyphColor);
+            } else {
+                await ensureFont(fontFamily, fontSize);
+                drawEmojiToCanvas(off, canvasSize, it.char, fontSize, yOffset, fontFamily, glyphColor);
+            }
+            const blob = await new Promise<Blob>((res) => off.toBlob((b) => res(b as Blob), "image/png"));
+            let fileName = it.filename || it.name;
+            if (!fileName.match(/\.(png|svg)$/i)) {
+                fileName += ".png";
+            }
+            blobs.push({ name: fileName, blob });
+            setProgress(Math.min(1, (i + 1) / source.length));
             await new Promise((r) => setTimeout(r, 0));
         }
 
@@ -128,7 +168,7 @@ export default function App() {
     const onDownloadSelected = () => {
         if (!selected.size) return;
         const setSel = new Set(selected);
-        makeZipFrom(filtered.filter((it) => setSel.has(it.filename || it.name)));
+        makeZipFrom(allIcons.filter((it) => setSel.has(it.filename || it.name)));
     };
     const onDownloadFiltered = () => makeZipFrom(filtered);
 

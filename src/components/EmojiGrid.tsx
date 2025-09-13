@@ -31,7 +31,10 @@ function CellComponent(props: CellComponentProps) {
     const { slice, selectedSet, onCellClick, glyphColor, cellSize, columnIndex = 0, rowIndex = 0, style } = props;
     const columns = Math.max(1, Math.floor(window.innerWidth / (cellSize + 8)));
     const idx = rowIndex * columns + columnIndex;
-    if (idx >= slice.length) return null;
+    if (idx >= slice.length) {
+        // Do not render anything for empty cells
+        return null;//<div style={{ background: "#FFD2D2", color: "#B22222", padding: "8px", textAlign: "center" }}>Empty cell</div>;
+    }
     const it = slice[idx];
     let iconComponent: React.ReactElement | null = null;
     if (it.iconComponent && (it.type === "fontawesome" || it.type === "react-icons")) {
@@ -97,7 +100,22 @@ const EmojiGrid = ({
             setContainerWidth(containerRef.current.offsetWidth);
         }
     }, [cellSize]);
-    const columns = Math.max(1, Math.floor(containerWidth / (cellSize + 8)));
+    // Only calculate columns if containerWidth is valid
+    const minColumns = 3;
+    const columns = containerWidth > 0 ? Math.max(minColumns, Math.floor(containerWidth / (cellSize + 8))) : minColumns;
+    // Calculate number of rows safely
+    const numRows = columns > 0 ? Math.ceil(slice.length / columns) : 0;
+    // Cap grid height to 80vh for scrollable area
+    const cappedHeight = numRows > 0 ? Math.min(numRows * (cellSize + 8), window.innerHeight * 0.8) : 0;
+
+    // Log the count of items in slice the first time EmojiGrid renders
+    const hasLogged = useRef(false);
+    useEffect(() => {
+        if (!hasLogged.current && typeof window !== "undefined") {
+            console.log("EmojiGrid initial slice count:", slice.length);
+            hasLogged.current = true;
+        }
+    }, [slice.length]);
 
     return (
         <Box h="100%" display="flex" flexDirection="column" minH="0" minW="0" /* bg={appBg} color={appFg} */>
@@ -115,17 +133,20 @@ const EmojiGrid = ({
                 borderColor="gray.200"
                 rounded="md"
                 p={2}
+                maxH="80vh"
             >
-                <Grid
-                    columnCount={columns}
-                    rowCount={Math.ceil(slice.length / columns)}
-                    columnWidth={cellSize + 8}
-                    rowHeight={cellSize + 8}
-                    // width={containerWidth}
-                    // height={Math.min(600, Math.ceil(slice.length / columns) * (cellSize + 8))}
-                    cellComponent={CellComponent}
-                    cellProps={{ items, slice, selectedSet, onCellClick, glyphColor, cellSize }}
-                />
+                {containerWidth > 0 && columns > 0 && numRows > 0 && (
+                    <Grid className="emoji-grid"
+                        columnCount={columns}
+                        rowCount={numRows}
+                        columnWidth={cellSize + 8}
+                        rowHeight={cellSize + 8}
+                        defaultWidth={containerWidth}
+                        //defaultHeight={cappedHeight}
+                        cellComponent={CellComponent}
+                        cellProps={{ items, slice, selectedSet, onCellClick, glyphColor, cellSize }}
+                    />
+                )}
             </Box>
         </Box>
     );

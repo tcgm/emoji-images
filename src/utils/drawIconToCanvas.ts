@@ -1,6 +1,6 @@
-import html2canvas from "html2canvas";
 import React from "react";
-import { createRoot } from "react-dom/client";
+import { renderToStaticMarkup } from "react-dom/server";
+import { Canvg } from "canvg";
 
 export async function drawIconToCanvas(
     canvas: HTMLCanvasElement,
@@ -8,45 +8,34 @@ export async function drawIconToCanvas(
     canvasSize: number,
     color: string
 ): Promise<void> {
-    // Create a hidden container
-    const container = document.createElement("div");
-    container.style.position = "fixed";
-    container.style.left = "-9999px";
-    container.style.width = `${canvasSize}px`;
-    container.style.height = `${canvasSize}px`;
-    document.body.appendChild(container);
-
-    // Render the icon into the container
-    const root = createRoot(container);
-    root.render(
-        React.createElement(iconComponent, {
-            style: {
+    try {
+        // Render the icon as SVG markup (not nested)
+        let svgMarkup = renderToStaticMarkup(
+            React.createElement(iconComponent, {
                 width: canvasSize,
                 height: canvasSize,
                 color,
                 fontSize: canvasSize,
-                display: "block"
-            }
-        })
-    );
-
-    // Wait for render
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    // Use html2canvas to capture
-    const image = await html2canvas(container, {
-        backgroundColor: null,
-        width: canvasSize,
-        height: canvasSize,
-        scale: 1,
-    });
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-        ctx.clearRect(0, 0, canvasSize, canvasSize);
-        ctx.drawImage(image, 0, 0, canvasSize, canvasSize);
+                style: {
+                    width: canvasSize,
+                    height: canvasSize,
+                    color,
+                    fontSize: canvasSize,
+                    display: 'block',
+                },
+            })
+        );
+        // If markup does not start with <svg, wrap it
+        if (!svgMarkup.trim().startsWith('<svg')) {
+            svgMarkup = `<svg xmlns='http://www.w3.org/2000/svg' width='${canvasSize}' height='${canvasSize}'>${svgMarkup}</svg>`;
+        }
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+            ctx.clearRect(0, 0, canvasSize, canvasSize);
+            const v = await Canvg.fromString(ctx, svgMarkup);
+            await v.render();
+        }
+    } catch (e) {
+        // fallback: do nothing
     }
-
-    // Clean up
-    root.unmount();
-    document.body.removeChild(container);
 }
