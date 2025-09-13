@@ -1,0 +1,19 @@
+:root {
+    color-scheme: dark;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+}
+
+/* When you add the TTF to /public/fonts: */
+@font-face {
+    font-family: 'OpenMojiBlack';
+    src: url('/fonts/OpenMoji-Black.ttf') format('truetype');
+    font-display: swap;
+}

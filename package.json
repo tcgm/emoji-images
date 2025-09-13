@@ -1,28 +1,39 @@
 {
   "name": "emojiimages",
   "version": "1.2.1",
+  "description": "[![npm version](https://badge.fury.io/js/emojiimages.svg)](https://badge.fury.io/js/emojiimages)",
+  "main": "main.js",
   "keywords": [
     "emoji"
   ],
   "homepage": "https://github.com/cj1128/emoji-images",
   "author": "CJ Ting <cjting1128@gmail.com>",
-  "scripts": {
-    "dev": "vite"
-  },
   "license": "MIT",
   "files": [
     "imgs"
   ],
-  "devDependencies": {
-    "imagemin": "8.0.1",
-    "imagemin-pngquant": "9.0.2",
-    "jszip": "3.7.1",
-    "nprogress": "0.2.0",
-    "vite": "2.8.4",
-    "vite-plugin-windicss": "1.8.1"
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "emojiimages": "^1.2.1",
-    "openmoji": "^16.0.0"
+    "@chakra-ui/react": "^2.10.9",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "framer-motion": "^12.23.12",
+    "jszip": "^3.10.1",
+    "nprogress": "^0.2.0",
+    "openmoji": "^16.0.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/nprogress": "^0.2.3",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5"
   }
 }
