@@ -20,5 +20,9 @@
     "nprogress": "0.2.0",
     "vite": "2.8.4",
     "vite-plugin-windicss": "1.8.1"
+  },
+  "dependencies": {
+    "emojiimages": "^1.2.1",
+    "openmoji": "^16.0.0"
   }
 }
