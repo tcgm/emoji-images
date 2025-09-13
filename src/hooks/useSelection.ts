@@ -27,5 +27,5 @@ export function useSelection() {
     const clear = () => setSelected(new Set());
     const selectAll = (keys: string[]) => setSelected(new Set(keys));
 
-    return { selected, toggle, rangeAdd, rememberIndex, lastIndex, clear, selectAll };
+    return { selected, toggle, rangeAdd, rememberIndex, lastIndex, clear, selectAll, setSelected };
 }

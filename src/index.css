@@ -8,7 +8,7 @@ body {
     margin: 0;
     overflow: hidden;
     /* page never scrolls */
-    font-family: system-ui, sans-serif;
+    font-family: 'OpenMojiBlack', system-ui, sans-serif;
 }
 
 /* keep your font-face here too */

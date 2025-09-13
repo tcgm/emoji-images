@@ -1,87 +1,164 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Box, SimpleGrid, Text } from "@chakra-ui/react";
+import { useEffect, useRef, useState } from "react";
+import { Box } from "@chakra-ui/react";
+import { Grid } from "react-window";
 import EmojiCell from "./EmojiCell";
-import type { EmojiItem } from "../utils/types";
+import type { IconItem } from "../utils/iconLibrary";
 
-type Props = {
-    items: EmojiItem[];
+interface EmojiGridProps {
+    items: IconItem[];
+    slice: IconItem[];
     selectedSet: Set<string>;
-    onCellClick: (index: number, e: React.MouseEvent) => void;
+    onCellClick: (idx: number, e: React.MouseEvent) => void;
     glyphColor: string;
-    fontFamily: string;
-    cellSize?: number;
-};
+    appBg?: string;
+    appFg?: string;
+    cellSize: number;
+}
 
-const requestIdle = (cb: () => void) => {
-    if ("requestIdleCallback" in window) (window as any).requestIdleCallback(cb, { timeout: 50 });
-    else setTimeout(cb, 16);
-};
+interface CellComponentProps {
+    items: IconItem[];
+    slice: IconItem[];
+    selectedSet: Set<string>;
+    onCellClick: (idx: number, e: React.MouseEvent) => void;
+    glyphColor: string;
+    cellSize: number;
+    columnIndex?: number;
+    rowIndex?: number;
+    style?: React.CSSProperties;
+}
 
-export default function EmojiGrid({
-    items, selectedSet, onCellClick, glyphColor, fontFamily, cellSize = 84
-}: Props) {
+function CellComponent(props: CellComponentProps) {
+    const { slice, selectedSet, onCellClick, glyphColor, cellSize, columnIndex = 0, rowIndex = 0, style } = props;
+    const columns = Math.max(1, Math.floor(window.innerWidth / (cellSize + 8)));
+    const idx = rowIndex * columns + columnIndex;
+    if (idx >= slice.length) return null;
+    const it = slice[idx];
+    if (it.type === "openmoji") {
+        return (
+            <div style={style} key={it.filename}>
+                <EmojiCell
+                    char={it.char || ""}
+                    filename={it.filename || it.name}
+                    selected={selectedSet.has(it.filename || it.name)}
+                    onClick={(e) => onCellClick(idx, e)}
+                    glyphColor={glyphColor}
+                    fontFamily="OpenMojiBlack, system-ui, sans-serif"
+                    cellSize={cellSize}
+                />
+            </div>
+        );
+    } else if (it.type === "fontawesome" || it.type === "react-icons") {
+        const logPrefix = `[EmojiGrid Render]`;
+        if (!it.iconComponent) {
+            console.warn(`${logPrefix} Missing iconComponent for`, it.name, it);
+            return null;
+        }
+        if (typeof it.iconComponent !== "function") {
+            console.warn(`${logPrefix} iconComponent is not a function for`, it.name, it.iconComponent);
+            return null;
+        }
+        let rendered: React.ReactElement | null = null;
+        try {
+            const result = it.iconComponent({});
+            if (
+                result &&
+                typeof result === "object" &&
+                "type" in result &&
+                (typeof result.type === "function" || typeof result.type === "string")
+            ) {
+                rendered = result as React.ReactElement;
+            } else {
+                console.warn(`${logPrefix} Render result not a valid React element:`, it.name, result);
+                return null;
+            }
+        } catch (e) {
+            console.error(`${logPrefix} Error rendering icon`, it.name, e);
+            return null;
+        }
+        return (
+            <div style={style} key={it.name}>
+                <Box
+                    as="button"
+                    title={it.name}
+                    onClick={(e) => onCellClick(idx, e)}
+                    w={`${cellSize}px`}
+                    h={`${cellSize}px`}
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    fontSize={`${Math.max(24, Math.round(cellSize * 0.6))}px`}
+                    color={glyphColor}
+                >
+                    {rendered}
+                </Box>
+            </div>
+        );
+    } else {
+        return null;
+    }
+}
+
+const EmojiGrid = ({
+    items,
+    slice,
+    selectedSet,
+    onCellClick,
+    glyphColor,
+    // appBg,
+    // appFg,
+    cellSize
+}: EmojiGridProps) => {
+    const [containerWidth, setContainerWidth] = useState(0);
+    const containerRef = useRef<HTMLDivElement | null>(null);
     const scrollRef = useRef<HTMLDivElement | null>(null);
 
-    // incremental render
-    const INITIAL = 200, STEP_IDLE = 200, STEP_SCROLL = 400;
-    const [visible, setVisible] = useState(INITIAL);
-
     useEffect(() => {
-        setVisible(INITIAL);
-        let cancel = false;
-        const tick = () =>
-            requestIdle(() => {
-                if (cancel) return;
-                setVisible(v => (v < items.length ? Math.min(items.length, v + STEP_IDLE) : v));
-                if (!cancel) tick();
-            });
-        tick();
-        return () => { cancel = true; };
-    }, [items]);
-
-    const onScroll = () => {
-        const el = scrollRef.current;
-        if (!el) return;
-        const near = el.scrollTop + el.clientHeight >= el.scrollHeight - 200;
-        if (near) setVisible(v => Math.min(items.length, v + STEP_SCROLL));
-    };
-
-    const slice = useMemo(() => items.slice(0, visible), [items, visible]);
+        const handleResize = () => {
+            if (containerRef.current) {
+                setContainerWidth(containerRef.current.offsetWidth);
+            }
+        };
+        handleResize();
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+    useEffect(() => {
+        if (containerRef.current) {
+            setContainerWidth(containerRef.current.offsetWidth);
+        }
+    }, [cellSize]);
+    const columns = Math.max(1, Math.floor(containerWidth / (cellSize + 8)));
 
     return (
-        // Wrapper fills the height it gets from App.tsx
-        <Box h="100%" display="flex" flexDirection="column" minH="0" minW="0">
-            {/* Only this inner box scrolls */}
+        <Box h="100%" display="flex" flexDirection="column" minH="0" minW="0" /* bg={appBg} color={appFg} */>
             <Box
-                ref={scrollRef}
+                ref={el => {
+                    scrollRef.current = el;
+                    containerRef.current = el;
+                }}
                 flex="1"
                 minH="0"
-                overflowY="auto"
+                minW="0"
+                h="100%"
+                overflow="auto"
                 borderWidth="1px"
                 borderColor="gray.200"
                 rounded="md"
                 p={2}
-                onScroll={onScroll}
             >
-                <SimpleGrid columns={[3, 6, 8, 10, 12]} spacing={2}>
-                    {slice.map((it, idx) => (
-                        <EmojiCell
-                            key={it.filename}
-                            char={it.char}
-                            filename={it.filename}
-                            selected={selectedSet.has(it.filename)}
-                            onClick={(e) => onCellClick(idx, e)}
-                            glyphColor={glyphColor}
-                            fontFamily={fontFamily}
-                            cellSize={cellSize}
-                        />
-                    ))}
-                </SimpleGrid>
+                <Grid
+                    columnCount={columns}
+                    rowCount={Math.ceil(slice.length / columns)}
+                    columnWidth={cellSize + 8}
+                    rowHeight={cellSize + 8}
+                    // width={containerWidth}
+                    // height={Math.min(600, Math.ceil(slice.length / columns) * (cellSize + 8))}
+                    cellComponent={CellComponent}
+                    cellProps={{ items, slice, selectedSet, onCellClick, glyphColor, cellSize }}
+                />
             </Box>
-
-            <Text mt={2} fontSize="sm" color="gray.600">
-                Showing <b>{slice.length}</b> of <b>{items.length}</b>
-            </Text>
         </Box>
     );
-}
+};
+
+export default EmojiGrid;

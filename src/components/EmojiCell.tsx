@@ -1,4 +1,4 @@
-import { Box } from "@chakra-ui/react";
+import { Box, useColorModeValue } from "@chakra-ui/react";
 
 type Props = {
     char: string;
@@ -11,8 +11,21 @@ type Props = {
 };
 
 export default function EmojiCell({
-    char, filename, selected, onClick, glyphColor, fontFamily, cellSize
+    char,
+    filename,
+    selected,
+    onClick,
+    glyphColor,
+    fontFamily,
+    cellSize
 }: Props) {
+    const borderColor = selected
+        ? useColorModeValue("purple.500", "purple.300")
+        : useColorModeValue("gray.200", "gray.700");
+    const bgColor = selected
+        ? useColorModeValue("purple.50", "purple.900")
+        : useColorModeValue("white", "gray.800");
+    const hoverBorderColor = useColorModeValue("purple.400", "purple.200");
     return (
         <Box
             as="button"
@@ -21,8 +34,8 @@ export default function EmojiCell({
             w={`${cellSize}px`}
             h={`${cellSize}px`}
             borderWidth={selected ? "2px" : "1px"}
-            borderColor={selected ? "purple.500" : "gray.200"}
-            bg={selected ? "purple.50" : "white"}
+            borderColor={borderColor}
+            bg={bgColor}
             rounded="lg"
             display="flex"
             alignItems="center"
@@ -31,7 +44,7 @@ export default function EmojiCell({
             fontSize={`${Math.max(24, Math.round(cellSize * 0.6))}px`}
             color={glyphColor}
             userSelect="none"
-            _hover={{ borderColor: "purple.400" }}
+            _hover={{ borderColor: hoverBorderColor }}
         >
             {char}
         </Box>
