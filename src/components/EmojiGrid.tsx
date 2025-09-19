@@ -66,6 +66,7 @@ function CellComponent(props: CellComponentProps) {
                 name={it.name}
                 type={it.type}
                 keywords={it.keywords}
+                source={it.source}
             />
         </div>
     );

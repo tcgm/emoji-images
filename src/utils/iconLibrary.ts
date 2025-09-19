@@ -17,16 +17,31 @@ import * as riIcons from "react-icons/ri";
 import * as cgIcons from "react-icons/cg";
 import * as biIcons from "react-icons/bi";
 import * as siIcons from "react-icons/si";
+import * as ionIcons from 'react-icons/io5';
+import * as tbIcons from 'react-icons/tb';
+import * as wiIcons from 'react-icons/wi';
+import * as rxIcons from 'react-icons/rx';
+import * as luIcons from 'react-icons/lu';
+import * as piIcons from 'react-icons/pi';
+import * as hiIcons from 'react-icons/hi';
+import * as hi2Icons from 'react-icons/hi2';
+import twemoji from 'twemoji';
+import emojiData from 'unicode-emoji-json';
+// Noto Emoji font: @notofonts/emoji (add to your CSS/font loader)
 
-export type IconType = "openmoji" | "fontawesome" | "gameicons" | "react-icons";
+import { openmojiSequences } from './openmojiSequences';
+
+export type IconType = "openmoji" | "fontawesome" | "gameicons" | "react-icons" | "twemoji" | "notoemoji";
 
 export type IconItem = {
     type: IconType;
     name: string;
     keywords: string[];
-    // For OpenMoji
+    source: string;
+    // For OpenMoji, Twemoji, NotoEmoji
     char?: string;
     filename?: string;
+    svgUrl?: string; // For Twemoji
     // For FontAwesome, GameIcons, React-Icons
     iconComponent?: any;
 };
@@ -41,6 +56,7 @@ const extractFAIcons = (iconSet: any, type: IconType, prefix: string): IconItem[
                 type,
                 name: `fa-source-${prefix}-${key}`,
                 keywords: [key],
+                source: `fontawesome-${prefix}`,
                 iconComponent: icon,
             };
         });
@@ -77,6 +93,14 @@ const extractReactIcons = (): IconItem[] => {
         { set: cgIcons, prefix: "react-cg" },
         { set: biIcons, prefix: "react-bi" },
         { set: siIcons, prefix: "react-si" },
+        { set: ionIcons, prefix: "react-ion" },
+        { set: tbIcons, prefix: "react-tb" },
+        { set: wiIcons, prefix: "react-wi" },
+        { set: rxIcons, prefix: "react-rx" },
+        { set: luIcons, prefix: "react-lu" },
+        { set: piIcons, prefix: "react-pi" },
+        { set: hiIcons, prefix: "react-hi" },
+        { set: hi2Icons, prefix: "react-hi2" },
     ];
     const icons: IconItem[] = [];
     allIconSets.forEach(({ set, prefix }) => {
@@ -88,6 +112,7 @@ const extractReactIcons = (): IconItem[] => {
                     type: "react-icons",
                     name: `${prefix}-${key}`,
                     keywords: [key],
+                    source: prefix,
                     iconComponent: icon,
                 });
             });
@@ -95,40 +120,153 @@ const extractReactIcons = (): IconItem[] => {
     return icons;
 };
 
-import { openmojiFilenames } from "./openmojiFilenames";
+
+
+function parseEmojiSequences(text: string): string[][] {
+    const lines = text.split(/\r?\n/);
+    const codepoints: string[][] = [];
+    for (const line of lines) {
+        if (line.trim().startsWith('#') || !line.trim()) continue;
+        // Format: code_point(s) ; ...
+        const match = line.match(/^([0-9A-Fa-f ]+)\s*;/);
+        if (match) {
+            const cps = match[1].trim().split(/\s+/);
+            codepoints.push(cps);
+        } else if (line.includes('..')) {
+            // Range, e.g. 231A..231B
+            const rangeMatch = line.match(/^([0-9A-Fa-f]+)\.\.([0-9A-Fa-f]+)\s*;/);
+            if (rangeMatch) {
+                const start = parseInt(rangeMatch[1], 16);
+                const end = parseInt(rangeMatch[2], 16);
+                for (let cp = start; cp <= end; cp++) {
+                    codepoints.push([cp.toString(16).toUpperCase()]);
+                }
+            }
+        }
+    }
+    return codepoints;
+}
+
+function parseSupplement(text: string): string[][] {
+    const lines = text.split(/\r?\n/);
+    const codepoints: string[][] = [];
+    for (const line of lines) {
+        if (!line.trim() || line.trim().startsWith('#')) continue;
+        // Format: codepoints ; ...
+        const match = line.match(/^([0-9a-fA-F ]+)\s*;/);
+        if (match) {
+            const cps = match[1].trim().split(/\s+/);
+            codepoints.push(cps);
+        }
+    }
+    return codepoints;
+}
+
+const sequenceToEmoji = (seq: string[]): string => seq.map(cp => String.fromCodePoint(parseInt(cp, 16))).join("");
+
+const getEmojiMeta = (emoji: string) => {
+    return emojiData[emoji] || null;
+};
+
+function isFlagEmoji(emoji: string): boolean {
+    // Flags are two regional indicator symbols (U+1F1E6 to U+1F1FF)
+    return emoji.length === 2 &&
+        emoji.codePointAt(0)! >= 0x1F1E6 && emoji.codePointAt(0)! <= 0x1F1FF &&
+        emoji.codePointAt(1)! >= 0x1F1E6 && emoji.codePointAt(1)! <= 0x1F1FF;
+}
+
+function flagCodepoints(emoji: string): string {
+    // Return codepoints for Twemoji SVG URL
+    return Array.from(emoji).map(c => c.codePointAt(0)?.toString(16).toLowerCase()).join('-');
+}
+
+const loadTwemoji = (): IconItem[] => {
+    return Object.keys(emojiData).map(emoji => {
+        const meta = emojiData[emoji];
+        let svgUrl = '';
+        if (isFlagEmoji(emoji)) {
+            svgUrl = `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/${flagCodepoints(emoji)}.svg`;
+        } else {
+            const codepoints = twemoji.convert.toCodePoint(emoji);
+            svgUrl = `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/${codepoints}.svg`;
+        }
+        return {
+            type: "twemoji",
+            name: meta.name,
+            keywords: meta.keywords,
+            source: "twemoji",
+            char: emoji,
+            svgUrl,
+        };
+    });
+};
 
 const loadOpenMoji = (): IconItem[] => {
-    return openmojiFilenames.map(filename => {
-        const base = filename.replace(/\.png$/, "");
-        let char = "";
-        try {
-            char = base.split("-").map(cp => String.fromCodePoint(parseInt(cp, 16))).join("");
-        } catch (e) {
-            char = "";
+    return openmojiSequences.map(seq => {
+        const char = sequenceToEmoji(seq);
+        const meta = getEmojiMeta(char);
+        // For flags, ensure char is two regional indicators
+        let displayChar = char;
+        if (isFlagEmoji(char)) {
+            displayChar = char;
         }
         return {
             type: "openmoji",
-            name: base,
-            keywords: [base],
-            char,
-            filename,
+            name: meta?.name || seq.join("-"),
+            keywords: meta?.keywords || [seq.join("-")],
+            source: "openmoji",
+            char: displayChar,
+        };
+    });
+};
+
+const loadNotoEmoji = (): IconItem[] => {
+    return Object.keys(emojiData).map(emoji => {
+        const meta = emojiData[emoji];
+        let displayChar = emoji;
+        if (isFlagEmoji(emoji)) {
+            displayChar = emoji;
+        }
+        return {
+            type: "notoemoji",
+            name: meta.name,
+            keywords: meta.keywords,
+            source: "notoemoji",
+            char: displayChar,
         };
     });
 };
 
 export const loadAllIcons = (): IconItem[] => {
     const openmoji = loadOpenMoji();
+    const twemojis = loadTwemoji();
+    const notoemojis = loadNotoEmoji();
     // Only use react-icons/fa for FontAwesome
     const fontawesome = extractFAIcons(faIcons, "fontawesome", "fa");
     // const gameicons = extractGameIcons();
     const reacticons = extractReactIcons();
-    return [...openmoji, ...fontawesome, /* ...gameicons, */ ...reacticons];
+    return [
+        ...openmoji,
+        ...twemojis,
+        ...notoemojis,
+        ...fontawesome,
+        /* ...gameicons, */ ...reacticons
+    ];
 };
 
 export const searchIcons = (query: string, icons: IconItem[]): IconItem[] => {
-    const q = query.toLowerCase();
-    return icons.filter(icon =>
-        icon.name.toLowerCase().includes(q) ||
-        icon.keywords.some(k => k.toLowerCase().includes(q))
-    );
+    const tokens = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    return icons.filter(icon => {
+        return tokens.every(token => {
+            if (token.startsWith('#')) {
+                const tag = token.slice(1);
+                return icon.source && icon.source.toLowerCase().includes(tag);
+            }
+            return (
+                icon.name?.toLowerCase().includes(token) ||
+                (Array.isArray(icon.keywords) && icon.keywords.some(k => k.toLowerCase().includes(token))) ||
+                (icon.char && icon.char.toLowerCase().includes(token))
+            );
+        });
+    });
 };

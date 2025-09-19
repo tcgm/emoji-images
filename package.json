@@ -13,6 +13,7 @@
     "imgs"
   ],
   "scripts": {
+    "start": "npm run dev",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
@@ -37,7 +38,9 @@
     "react-dom": "^19.1.1",
     "react-game-icons": "^1.1.0",
     "react-icons": "^5.5.0",
-    "react-window": "^2.1.0"
+    "react-window": "^2.1.0",
+    "twemoji": "^14.0.2",
+    "unicode-emoji-json": "^0.8.0"
   },
   "devDependencies": {
     "@types/nprogress": "^0.2.3",

@@ -12,6 +12,7 @@ type Props = {
     name?: string;
     type?: string;
     keywords?: string[];
+    source?: string;
 };
 
 export default function EmojiCell({
@@ -25,7 +26,8 @@ export default function EmojiCell({
     cellSize,
     name,
     type,
-    keywords
+    keywords,
+    source
 }: Props) {
     const borderColor = selected
         ? useColorModeValue("purple.500", "purple.300")
@@ -38,6 +40,7 @@ export default function EmojiCell({
         <Box textAlign="left">
             <strong>{name || filename}</strong><br />
             {type && <span>Type: {type}<br /></span>}
+            {source && <span>Source: {source}<br /></span>}
             {keywords && keywords.length > 0 && <span>Keywords: {keywords.join(", ")}<br /></span>}
             {filename && <span>File: {filename}</span>}
         </Box>

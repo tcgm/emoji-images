@@ -4,6 +4,7 @@ import "nprogress/nprogress.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useEmojiData } from "./hooks/useEmojiData";
 import { loadAllIcons } from "./utils/iconLibrary";
+import { searchIcons } from "./utils/iconLibrary";
 import { useEnsureFont } from "./hooks/useFont";
 import { useSelection } from "./hooks/useSelection";
 import { drawEmojiToCanvas } from "./utils/canvas";
@@ -31,17 +32,8 @@ export default function App() {
     // Filtering
     const [query, setQuery] = useState("");
     const filtered = useMemo(() => {
-        const q = query.trim().toLowerCase();
-        if (!q) return allIcons.filter(it => !!it && typeof it === "object" && it.name);
-        const tokens = q.split(/\s+/g).filter(Boolean);
-        return allIcons.filter((it) =>
-            !!it && typeof it === "object" && it.name &&
-            tokens.every((t) =>
-                it.name.toLowerCase().includes(t) ||
-                (it.keywords && it.keywords.some(k => k.toLowerCase().includes(t))) ||
-                (it.char && it.char.toLowerCase().includes(t))
-            )
-        );
+        // Use searchIcons for advanced search features
+        return query.trim() ? searchIcons(query, allIcons) : allIcons;
     }, [allIcons, query]);
 
     // Verify all indexes in filtered are real
@@ -129,13 +121,12 @@ export default function App() {
     const [progress, setProgress] = useState(0);
     const offscreenRef = useRef<HTMLCanvasElement | null>(null);
 
-    const makeZipFrom = useCallback(async (source: any[]) => {
+    const processAndDownload = useCallback(async (source: any[]) => {
         if (!offscreenRef.current) return;
         setBusy(true); setProgress(0); NProgress.start();
 
         await ensureFont(fontFamily, fontSize);
         const off = offscreenRef.current!;
-        const batch = 120;
         const blobs: Array<{ name: string; blob: Blob }> = [];
 
         for (let i = 0; i < source.length; i++) {
@@ -156,21 +147,34 @@ export default function App() {
             await new Promise((r) => setTimeout(r, 0));
         }
 
-        const zipBlob = await zipBlobs(blobs);
+        if (blobs.length <= 10) {
+            // Direct download for 10 or fewer items
+            blobs.forEach(({ name, blob }) => {
+                const a = document.createElement("a");
+                a.download = name;
+                a.href = URL.createObjectURL(blob);
+                a.click();
+                URL.revokeObjectURL(a.href);
+            });
+        } else {
+            // Zip and download for more than 10 items
+            const zipBlob = await zipBlobs(blobs);
+            const a = document.createElement("a");
+            a.download = `emojis_${meta?.sequencesVersion ?? "v"}_${meta?.sequencesDate ?? "date"}.zip`;
+            a.href = URL.createObjectURL(zipBlob);
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
         NProgress.done(); setBusy(false);
-        const a = document.createElement("a");
-        a.download = `emojis_${meta?.sequencesVersion ?? "v"}_${meta?.sequencesDate ?? "date"}.zip`;
-        a.href = URL.createObjectURL(zipBlob);
-        a.click();
-        URL.revokeObjectURL(a.href);
     }, [canvasSize, ensureFont, fontFamily, fontSize, glyphColor, meta, yOffset]);
 
     const onDownloadSelected = () => {
         if (!selected.size) return;
         const setSel = new Set(selected);
-        makeZipFrom(allIcons.filter((it) => setSel.has(it.filename || it.name)));
+        processAndDownload(allIcons.filter((it) => setSel.has(it.filename || it.name)));
     };
-    const onDownloadFiltered = () => makeZipFrom(filtered);
+    const onDownloadFiltered = () => processAndDownload(filtered);
 
     const onSelectAllFiltered = () => selectAll(filtered.map((f) => f.filename || f.name));
     const onShuffle = () => {
@@ -180,15 +184,15 @@ export default function App() {
 
     return (
         <Box h="100vh" minH="0">
-            <button style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000 }} onClick={() => setShowTest(v => !v)}>
+            {/*  <button style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000 }} onClick={() => setShowTest(v => !v)}>
                 {showTest ? "Show Full App" : "Show Icon Test"}
-            </button>
+            </button> */}
             {showTest ? (
                 <ReactIconTest />
             ) : (
                 <Container maxW="6xl" h="100%" minH="0" py={4}>
                     <Flex direction="column" h="100%" minH="0" gap={3}>
-                        <Flex gap={6} align="flex-start" flex="1" minH="0" flexWrap="nowrap" h="100%">
+                        <Flex gap={6} align="flex-start" flex="1" minH="0" flexWrap="nowrap" h="100%" justifyContent="space-between">
                             <Box flexShrink={0}>
                                 <PreviewCard
                                     canvasRef={previewRef}
@@ -211,7 +215,7 @@ export default function App() {
                                     onSelectAllFiltered={() => selectAll(filtered.map(f => f.filename || f.name))}
                                     onClearSelection={clear}
                                     onDownloadSelected={onDownloadSelected}
-                                    onDownloadFiltered={() => makeZipFrom(filtered)}
+                                    onDownloadFiltered={() => processAndDownload(filtered)}
                                     filteredCount={filtered.length}
                                     selectedCount={selected.size}
                                     busy={busy}

@@ -35,12 +35,13 @@ export default function Toolbar(props: Props) {
 
     const { colorMode, toggleColorMode } = useColorMode();
     return (
-        <Box w="100%" px={2} py={1}>
-            <Flex gap={2} wrap="nowrap" align="center" w="100%">
-                <Box minW="140px">
-                    <FormLabel htmlFor="search" fontSize="xs" mb={0} p={0}>Search</FormLabel>
+        <Box w="100%" px={2} py={1} className="toolbar-container" id="toolbar-container">
+            <Flex gap={2} wrap="nowrap" align="center" w="100%" className="toolbar-flex" id="toolbar-flex">
+                <Box minW="140px" className="toolbar-search" id="toolbar-search">
+                    <FormLabel htmlFor="search" fontSize="xs" mb={0} p={0} className="toolbar-label" id="toolbar-label-search">Search</FormLabel>
                     <Input
                         id="search"
+                        className="toolbar-input-search"
                         placeholder="emoji or hex (e.g. 1f600)"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
@@ -49,27 +50,28 @@ export default function Toolbar(props: Props) {
                         mr={1}
                     />
                 </Box>
-                <Box minW="180px">
-                    <FormLabel htmlFor="emoji-size" fontSize="xs" mb={0} p={0}>Size</FormLabel>
-                    <Flex align="center" gap={1}>
+                <Box minW="180px" className="toolbar-size" id="toolbar-size">
+                    <FormLabel htmlFor="emoji-size" fontSize="xs" mb={0} p={0} className="toolbar-label" id="toolbar-label-size">Size</FormLabel>
+                    <Flex align="center" gap={1} className="toolbar-size-flex" id="toolbar-size-flex">
                         <Slider
                             id="emoji-size"
-                            min={1}
-                            max={1024}
-                            step={1}
+                            className="toolbar-slider-size"
+                            min={32}
+                            max={256}
+                            step={8}
                             value={canvasSize}
                             onChange={setCanvasSize}
                             flex="1"
                             size="sm"
                         >
-                            <SliderTrack>
-                                <SliderFilledTrack />
+                            <SliderTrack className="toolbar-slidertrack-size" id="toolbar-slidertrack-size">
+                                <SliderFilledTrack className="toolbar-sliderfilledtrack-size" id="toolbar-sliderfilledtrack-size" />
                             </SliderTrack>
-                            <SliderThumb />
+                            <SliderThumb className="toolbar-sliderthumb-size" id="toolbar-sliderthumb-size" />
                         </Slider>
                         <Input
                             type="number"
-                            min={1}
+                            min={32}
                             max={1024}
                             value={canvasSize}
                             onChange={e => {
@@ -80,55 +82,57 @@ export default function Toolbar(props: Props) {
                             size="sm"
                             ml={1}
                             px={1}
+                            className="toolbar-input-size"
+                            id="toolbar-input-size"
                         />
                     </Flex>
                 </Box>
-                <Box minW="80px">
-                    <FormLabel htmlFor="font-size" fontSize="xs" mb={0} p={0}>Font</FormLabel>
-                    <NumberInput value={fontSize} onChange={(_, v) => setFontSize(v || 160)} size="sm" w="60px" mr={1} id="font-size">
-                        <NumberInputField px={1} />
+                <Box minW="80px" className="toolbar-font" id="toolbar-font">
+                    <FormLabel htmlFor="font-size" fontSize="xs" mb={0} p={0} className="toolbar-label" id="toolbar-label-font">Font</FormLabel>
+                    <NumberInput value={fontSize} onChange={(_, v) => setFontSize(v || 160)} size="sm" w="60px" mr={1} id="font-size" className="toolbar-numberinput-font">
+                        <NumberInputField px={1} className="toolbar-numberinputfield-font" id="toolbar-numberinputfield-font" />
                     </NumberInput>
                 </Box>
-                <Box minW="80px">
-                    <FormLabel htmlFor="offset" fontSize="xs" mb={0} p={0}>Offset</FormLabel>
-                    <NumberInput value={yOffset} onChange={(_, v) => setYOffset(v || 0)} size="sm" w="60px" mr={1} id="offset">
-                        <NumberInputField px={1} />
+                <Box minW="80px" className="toolbar-offset" id="toolbar-offset">
+                    <FormLabel htmlFor="offset" fontSize="xs" mb={0} p={0} className="toolbar-label" id="toolbar-label-offset">Offset</FormLabel>
+                    <NumberInput value={yOffset} onChange={(_, v) => setYOffset(v || 0)} size="sm" w="60px" mr={1} id="offset" className="toolbar-numberinput-offset">
+                        <NumberInputField px={1} className="toolbar-numberinputfield-offset" id="toolbar-numberinputfield-offset" />
                     </NumberInput>
                 </Box>
-                <Box minW="80px">
-                    <FormLabel htmlFor="color" fontSize="xs" mb={0} p={0}>Color</FormLabel>
-                    <Select value={glyphColor} onChange={(e) => setGlyphColor(e.target.value)} size="sm" w="60px" mr={1} px={1} id="color">
+                <Box minW="80px" className="toolbar-color" id="toolbar-color">
+                    <FormLabel htmlFor="color" fontSize="xs" mb={0} p={0} className="toolbar-label" id="toolbar-label-color">Color</FormLabel>
+                    <Select value={glyphColor} onChange={(e) => setGlyphColor(e.target.value)} size="sm" w="60px" mr={1} px={1} id="color" className="toolbar-select-color">
                         <option value="#ffffff">White</option>
                         <option value="#000000">Black</option>
                     </Select>
                 </Box>
                 <Tooltip label={colorMode === "light" ? "Switch to dark mode" : "Switch to light mode"} placement="top">
-                    <Button onClick={toggleColorMode} size="sm" px={2} minW="32px">
+                    <Button onClick={toggleColorMode} size="sm" px={2} minW="32px" className="toolbar-btn-togglecolor" id="toolbar-btn-togglecolor">
                         {colorMode === "light" ? "🌙" : "☀️"}
                     </Button>
                 </Tooltip>
                 <Tooltip label="Shuffle" placement="top">
-                    <Button onClick={onShuffle} isDisabled={busy} size="sm" px={2} minW="32px">
+                    <Button onClick={onShuffle} isDisabled={busy} size="sm" px={2} minW="32px" className="toolbar-btn-shuffle" id="toolbar-btn-shuffle">
                         <RepeatIcon />
                     </Button>
                 </Tooltip>
                 <Tooltip label="Select All" placement="top">
-                    <Button onClick={onSelectAllFiltered} isDisabled={filteredCount === 0} size="sm" px={2} minW="32px">
+                    <Button onClick={onSelectAllFiltered} isDisabled={filteredCount === 0} size="sm" px={2} minW="32px" className="toolbar-btn-selectall" id="toolbar-btn-selectall">
                         <CheckIcon />
                     </Button>
                 </Tooltip>
                 <Tooltip label="Clear Selection" placement="top">
-                    <Button onClick={onClearSelection} isDisabled={selectedCount === 0} size="sm" px={2} minW="32px">
+                    <Button onClick={onClearSelection} isDisabled={selectedCount === 0} size="sm" px={2} minW="32px" className="toolbar-btn-clearselection" id="toolbar-btn-clearselection">
                         <DeleteIcon />
                     </Button>
                 </Tooltip>
                 <Tooltip label="Download Selected" placement="top">
-                    <Button colorScheme="purple" onClick={onDownloadSelected} isDisabled={selectedCount === 0 || busy} size="sm" px={2} minW="32px">
+                    <Button colorScheme="purple" onClick={onDownloadSelected} isDisabled={selectedCount === 0 || busy} size="sm" px={2} minW="32px" className="toolbar-btn-downloadselected" id="toolbar-btn-downloadselected">
                         <DownloadIcon />
                     </Button>
                 </Tooltip>
                 <Tooltip label="Download Filtered" placement="top">
-                    <Button colorScheme="blue" onClick={onDownloadFiltered} isDisabled={filteredCount === 0 || busy} size="sm" px={2} minW="32px">
+                    <Button colorScheme="blue" onClick={onDownloadFiltered} isDisabled={filteredCount === 0 || busy} size="sm" px={2} minW="32px" className="toolbar-btn-downloadfiltered" id="toolbar-btn-downloadfiltered">
                         <DownloadIcon />
                     </Button>
                 </Tooltip>
