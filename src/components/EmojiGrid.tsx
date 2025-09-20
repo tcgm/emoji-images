@@ -14,6 +14,7 @@ interface EmojiGridProps {
     appBg?: string;
     appFg?: string;
     cellSize: number;
+    isMobile?: boolean;
 }
 
 interface CellComponentProps {
@@ -82,7 +83,8 @@ const EmojiGrid = ({
     glyphColor,
     // appBg,
     // appFg,
-    cellSize
+    cellSize,
+    isMobile = false
 }: EmojiGridProps) => {
     const [containerWidth, setContainerWidth] = useState(0);
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -104,7 +106,7 @@ const EmojiGrid = ({
         }
     }, [cellSize]);
     // Only calculate columns if containerWidth is valid
-    const minColumns = 3;
+    const minColumns = isMobile ? 2 : 3;
     const columns = containerWidth > 0 ? Math.max(minColumns, Math.floor(containerWidth / (cellSize + 8))) : minColumns;
     // Calculate number of rows safely
     const numRows = columns > 0 ? Math.ceil(slice.length / columns) : 0;
@@ -135,7 +137,7 @@ const EmojiGrid = ({
                 borderWidth="1px"
                 borderColor="gray.200"
                 rounded="md"
-                p={2}
+                p={isMobile ? 1 : 2}
                 maxH="80vh"
             >
                 {containerWidth > 0 && columns > 0 && numRows > 0 && (

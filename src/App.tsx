@@ -1,4 +1,4 @@
-import { Box, Container, Flex, Progress } from "@chakra-ui/react";
+import { Box, Container, Flex, Progress, useMediaQuery, VStack, Text, Button, Drawer, DrawerBody, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton, useDisclosure } from "@chakra-ui/react";
 import LibrarySelector from "./components/LibrarySelector";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
@@ -13,12 +13,14 @@ import { drawIconToCanvas } from "./utils/drawIconToCanvas";
 import { zipBlobs } from "./utils/zip";
 import type { EmojiItem } from "./utils/types";
 import Toolbar from "./components/Toolbar";
-import ReactIconTest from "./components/ReactIconTest";
+// import ReactIconTest from "./components/ReactIconTest";
 import PreviewCard from "./components/PreviewCard";
 import EmojiGrid from "./components/EmojiGrid";
 
 export default function App() {
     const [showTest, setShowTest] = useState(false);
+    const [isMobile] = useMediaQuery("(max-width: 768px)");
+
     // Data
     const { meta, totalCount } = useEmojiData();
     const [allIcons] = useState(() => loadAllIcons());
@@ -208,34 +210,60 @@ export default function App() {
         }
     };
 
-    return (
-        <Box h="100vh" minH="0">
-            {/*  <button style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000 }} onClick={() => setShowTest(v => !v)}>
-                {showTest ? "Show Full App" : "Show Icon Test"}
-            </button> */}
-            {showTest ? (
-                <ReactIconTest />
-            ) : (
-                <Container maxW="6xl" h="100%" minH="0" py={4}>
-                    <Flex direction="column" h="100%" minH="0" gap={3}>
-                        <Flex gap={6} align="flex-start" flex="1" minH="0" flexWrap="nowrap" h="100%" justifyContent="space-between">
-                            <Box flexShrink={0} display="flex" flexDirection="column" gap={4} h="100%">
-                                <PreviewCard
-                                    canvasRef={previewRef}
-                                    version={meta?.sequencesVersion}
-                                    date={meta?.sequencesDate}
-                                    sequencesCount={meta?.sequencesCount}
-                                    supplementCount={meta?.supplementCount}
-                                    totalCount={totalCount}
-                                    canvasSize={canvasSize}
-                                />
-                                {/* Library selector as button list component */}
+    const MobileLayout = () => {
+        const {
+            isOpen: isToolbarOpen,
+            onOpen: onToolbarOpen,
+            onClose: onToolbarClose
+        } = useDisclosure();
+
+        const {
+            isOpen: isLibraryOpen,
+            onOpen: onLibraryOpen,
+            onClose: onLibraryClose
+        } = useDisclosure();
+
+        return (
+            <Box
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                justifyContent="center"
+                height="100vh"
+                width="100vw"
+                bg="gray.100"
+                p={4}
+            >
+                <Text fontSize="lg" fontWeight="bold">
+                    Mobile Layout
+                </Text>
+                <Box mt={4} display="flex" flexDirection="column" gap={4} width="100%">
+                    <Button onClick={onLibraryOpen} colorScheme="purple" size="sm">
+                        Open Library Selector
+                    </Button>
+                    <Button onClick={onToolbarOpen} colorScheme="purple" size="sm">
+                        Open Toolbar
+                    </Button>
+                    <Drawer isOpen={isLibraryOpen} placement="left" onClose={onLibraryClose} size="xs">
+                        <DrawerOverlay />
+                        <DrawerContent>
+                            <DrawerCloseButton />
+                            <DrawerHeader>Library Selector</DrawerHeader>
+                            <DrawerBody>
                                 <LibrarySelector
                                     selected={query}
                                     setQuery={setQuery}
+                                    isMobile={true}
                                 />
-                            </Box>
-                            <Flex direction="column" flex="1" minH="0" minW="0" h="100%">
+                            </DrawerBody>
+                        </DrawerContent>
+                    </Drawer>
+                    <Drawer isOpen={isToolbarOpen} placement="right" onClose={onToolbarClose} size="xs">
+                        <DrawerOverlay />
+                        <DrawerContent>
+                            <DrawerCloseButton />
+                            <DrawerHeader>Toolbar</DrawerHeader>
+                            <DrawerBody>
                                 <Toolbar
                                     query={query} setQuery={setQuery}
                                     canvasSize={canvasSize} setCanvasSize={setCanvasSize}
@@ -250,27 +278,97 @@ export default function App() {
                                     filteredCount={filtered.length}
                                     selectedCount={selected.size}
                                     busy={busy}
+                                    isMobile={true}
                                 />
-                                {busy && (
-                                    <Progress mt={3} size="sm" value={progress * 100} colorScheme="purple" />
-                                )}
-                                <Box flex="1" minH="0" minW="0" mt={3} h="100%">
-                                    <EmojiGrid
-                                        items={filtered}
-                                        slice={filtered}
-                                        selectedSet={selected}
-                                        onCellClick={onCellClick}
-                                        glyphColor={glyphColor}
-                                        /* appBg="#222"
-                                        appFg="#fff" */
-                                        cellSize={canvasSize}
-                                    />
-                                </Box>
-                            </Flex>
-                        </Flex>
-                        <canvas ref={offscreenRef} style={{ display: "none" }} />
-                    </Flex>
-                </Container>
+                            </DrawerBody>
+                        </DrawerContent>
+                    </Drawer>
+                    {busy && (
+                        <Progress mt={3} size="sm" value={progress * 100} colorScheme="purple" />
+                    )}
+                    <Box flex="1" minH="0" minW="0" mt={3} h="100%">
+                        <EmojiGrid
+                            items={filtered}
+                            slice={filtered}
+                            selectedSet={selected}
+                            onCellClick={onCellClick}
+                            glyphColor={glyphColor}
+                            cellSize={canvasSize}
+                            isMobile={true}
+                        />
+                    </Box>
+                </Box>
+            </Box>
+        );
+    };
+
+    const DesktopLayout = () => (
+        <Flex direction="column" h="100%" minH="0" gap={3}>
+            <Flex gap={6} align="flex-start" flex="1" minH="0" flexWrap="nowrap" h="100%" justifyContent="space-between">
+                <Box flexShrink={0} display="flex" flexDirection="column" gap={4} h="100%">
+                    <PreviewCard
+                        canvasRef={previewRef}
+                        version={meta?.sequencesVersion}
+                        date={meta?.sequencesDate}
+                        sequencesCount={meta?.sequencesCount}
+                        supplementCount={meta?.supplementCount}
+                        totalCount={totalCount}
+                        canvasSize={canvasSize}
+                    />
+                    {/* Library selector as button list component */}
+                    <LibrarySelector
+                        selected={query}
+                        setQuery={setQuery}
+                    />
+                </Box>
+                <Flex direction="column" flex="1" minH="0" minW="0" h="100%">
+                    <Toolbar
+                        query={query} setQuery={setQuery}
+                        canvasSize={canvasSize} setCanvasSize={setCanvasSize}
+                        fontSize={fontSize} setFontSize={setFontSize}
+                        yOffset={yOffset} setYOffset={setYOffset}
+                        glyphColor={glyphColor} setGlyphColor={setGlyphColor}
+                        onShuffle={onShuffle}
+                        onSelectAllFiltered={() => selectAll(filtered.map(f => f.filename || f.name))}
+                        onClearSelection={clear}
+                        onDownloadSelected={onDownloadSelected}
+                        onDownloadFiltered={() => processAndDownload(filtered)}
+                        filteredCount={filtered.length}
+                        selectedCount={selected.size}
+                        busy={busy}
+                    />
+                    {busy && (
+                        <Progress mt={3} size="sm" value={progress * 100} colorScheme="purple" />
+                    )}
+                    <Box flex="1" minH="0" minW="0" mt={3} h="100%">
+                        <EmojiGrid
+                            items={filtered}
+                            slice={filtered}
+                            selectedSet={selected}
+                            onCellClick={onCellClick}
+                            glyphColor={glyphColor}
+                            /* appBg="#222"
+                            appFg="#fff" */
+                            cellSize={canvasSize}
+                        />
+                    </Box>
+                </Flex>
+            </Flex>
+            <canvas ref={offscreenRef} style={{ display: "none" }} />
+        </Flex>
+    );
+
+    return (
+        <Box h="100vh" minH="0">
+            {/*  <button style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000 }} onClick={() => setShowTest(v => !v)}>
+                {showTest ? "Show Full App" : "Show Icon Test"}
+            </button> */}
+            {showTest ? (
+                <></>
+            ) : isMobile ? (
+                <MobileLayout />
+            ) : (
+                <DesktopLayout />
             )}
         </Box>
     );

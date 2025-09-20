@@ -7,15 +7,15 @@
     "emoji"
   ],
   "homepage": "https://github.com/cj1128/emoji-images",
-  "author": "CJ Ting <cjting1128@gmail.com>",
+  "author": "TCGM <thecrazygamemaster@gmail.com>",
   "license": "MIT",
   "files": [
     "imgs"
   ],
   "scripts": {
     "start": "npm run dev",
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "vite --host",
+    "build": "node --max-old-space-size=8192 ./node_modules/vite/bin/vite.js build",
     "preview": "vite preview"
   },
   "dependencies": {

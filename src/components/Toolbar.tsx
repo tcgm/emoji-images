@@ -19,6 +19,7 @@ type Props = {
     filteredCount: number;
     selectedCount: number;
     busy: boolean;
+    isMobile?: boolean;
 };
 
 export default function Toolbar(props: Props) {
@@ -30,14 +31,15 @@ export default function Toolbar(props: Props) {
         glyphColor, setGlyphColor,
         onShuffle, onSelectAllFiltered, onClearSelection,
         onDownloadSelected, onDownloadFiltered,
-        filteredCount, selectedCount, busy
+        filteredCount, selectedCount, busy,
+        isMobile = false
     } = props;
 
     const { colorMode, toggleColorMode } = useColorMode();
     return (
-        <Box w="100%" px={2} py={1} className="toolbar-container" id="toolbar-container">
-            <Flex gap={2} wrap="nowrap" align="center" w="100%" className="toolbar-flex" id="toolbar-flex">
-                <Box minW="256px" className="toolbar-search" id="toolbar-search">
+        <Box w="100%" px={isMobile ? 1 : 2} py={isMobile ? 0.5 : 1} className="toolbar-container" id="toolbar-container">
+            <Flex gap={isMobile ? 1 : 2} wrap="nowrap" align="center" w="100%" className="toolbar-flex" id="toolbar-flex">
+                <Box minW={isMobile ? "200px" : "256px"} className="toolbar-search" id="toolbar-search">
                     <FormLabel htmlFor="search" fontSize="xs" mb={0} p={0} className="toolbar-label" id="toolbar-label-search">Search</FormLabel>
                     <Flex align="center">
                         <Input

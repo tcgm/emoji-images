@@ -8,6 +8,7 @@ type Props = {
     supplementCount?: number;
     totalCount?: number;
     canvasSize?: number;
+    isMobile?: boolean;
 };
 
 export default function PreviewCard({
@@ -17,13 +18,14 @@ export default function PreviewCard({
     sequencesCount,
     supplementCount,
     totalCount,
-    canvasSize = 64
+    canvasSize = 64,
+    isMobile = false
 }: Props) {
     const cardBg = useColorModeValue("white", "gray.800");
     const borderColor = useColorModeValue("#e2e8f0", "#2d3748");
     const infoColor = useColorModeValue("gray.600", "gray.300");
     return (
-        <Card w="240px" bg={cardBg}>
+        <Card w={isMobile ? "100%" : "240px"} bg={cardBg}>
             <CardBody>
                 <canvas ref={canvasRef} style={{ width: canvasSize, height: canvasSize, borderRadius: 8, border: `1px solid ${borderColor}` }} />
                 <Heading size="sm" mt={2} mb={1}>Emoji Info</Heading>
