@@ -21,4 +21,17 @@ const theme = extendTheme({
     },
 });
 
+const customColors = {
+    white: "#ffffff",
+    black: "#000000",
+    red: "#ff0000",
+    green: "#00ff00",
+    blue: "#0000ff",
+};
+
+theme.colors = {
+    ...theme.colors,
+    custom: customColors,
+};
+
 export default theme;

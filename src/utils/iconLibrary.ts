@@ -29,7 +29,29 @@ import twemoji from 'twemoji';
 import emojiData from 'unicode-emoji-json';
 // Noto Emoji font: @notofonts/emoji (add to your CSS/font loader)
 
+// Add missing imports for React Icons sublibraries
+import * as ciIcons from "react-icons/ci"; // Circum Icons
+import * as vscIcons from "react-icons/vsc"; // VS Code Icons
+import * as laIcons from "react-icons/lia"; // Line Awesome
+import * as themifyIcons from "react-icons/tfi"; // Themify Icons
+import * as imIcons from "react-icons/im";
+import * as bs2Icons from "react-icons/bs";
+import * as bi2Icons from "react-icons/bi";
+import * as cg2Icons from "react-icons/cg";
+import * as diIcons from "react-icons/di";
+import * as fcIcons from "react-icons/fc";
+import * as fa6Icons from "react-icons/fa6";
+import * as grIcons from "react-icons/gr";
+import * as ri2Icons from "react-icons/ri";
+import * as slIcons from "react-icons/sl";
+
+
+
+
 import { openmojiSequences } from './openmojiSequences';
+import * as iconifyIcons from "@iconify/react"; // Import Iconify icons
+import { LIBRARIES } from "../libraries";
+// import * as gameIcons from "react-game-icons"; // Import GameIcons
 
 export type IconType = "openmoji" | "fontawesome" | "gameicons" | "react-icons" | "twemoji" | "notoemoji";
 
@@ -72,11 +94,11 @@ const extractFAIcons = (iconSet: any, type: IconType, prefix: string): IconItem[
 //                 type: "gameicons",
 //                 name: `gi-${key}`,
 //                 keywords: [key],
+//                 source: "gameicons", // Added source property
 //                 iconComponent: icon,
 //             };
 //         });
 // };
-
 // Helper to extract React-Icons from multiple sub-packages
 const extractReactIcons = (): IconItem[] => {
     const allIconSets = [
@@ -101,6 +123,20 @@ const extractReactIcons = (): IconItem[] => {
         { set: piIcons, prefix: "react-pi" },
         { set: hiIcons, prefix: "react-hi" },
         { set: hi2Icons, prefix: "react-hi2" },
+        { set: ciIcons, prefix: "react-ci" }, // Circum Icons
+        { set: vscIcons, prefix: "react-vsc" }, // VS Code Icons
+        { set: laIcons, prefix: "react-lia" }, // Line Awesome
+        { set: themifyIcons, prefix: "react-tfi" }, // Themify Icons
+        { set: imIcons, prefix: "react-im" },
+        { set: bs2Icons, prefix: "react-bs" },
+        { set: bi2Icons, prefix: "react-bi" },
+        { set: cg2Icons, prefix: "react-cg" },
+        { set: diIcons, prefix: "react-di" },
+        { set: fcIcons, prefix: "react-fc" },
+        { set: fa6Icons, prefix: "react-fa6" },
+        { set: grIcons, prefix: "react-gr" },
+        { set: ri2Icons, prefix: "react-ri" },
+        { set: slIcons, prefix: "react-sl" },
     ];
     const icons: IconItem[] = [];
     allIconSets.forEach(({ set, prefix }) => {
@@ -118,6 +154,19 @@ const extractReactIcons = (): IconItem[] => {
             });
     });
     return icons;
+};
+
+const extractIconifyIcons = (): IconItem[] => {
+    return Object.keys(iconifyIcons).map(key => {
+        const icon = (iconifyIcons as any)[key];
+        return {
+            type: "react-icons",
+            name: `iconify-${key}`,
+            keywords: [key],
+            source: "iconify",
+            iconComponent: icon,
+        };
+    });
 };
 
 
@@ -241,16 +290,19 @@ export const loadAllIcons = (): IconItem[] => {
     const openmoji = loadOpenMoji();
     const twemojis = loadTwemoji();
     const notoemojis = loadNotoEmoji();
-    // Only use react-icons/fa for FontAwesome
     const fontawesome = extractFAIcons(faIcons, "fontawesome", "fa");
-    // const gameicons = extractGameIcons();
     const reacticons = extractReactIcons();
+    const iconify = extractIconifyIcons();
+    // const gameicons = extractGameIcons(); // Include GameIcons
+
     return [
         ...openmoji,
         ...twemojis,
         ...notoemojis,
         ...fontawesome,
-        /* ...gameicons, */ ...reacticons
+        ...reacticons,
+        ...iconify,
+        // ...gameicons, // Add GameIcons to the list
     ];
 };
 
@@ -261,6 +313,11 @@ export const searchIcons = (query: string, icons: IconItem[]): IconItem[] => {
             if (token.startsWith('#')) {
                 const tag = token.slice(1);
                 return icon.source && icon.source.toLowerCase().includes(tag);
+            } else if (token.includes('..')) {
+                // Handle range queries like 1F600..1F64F
+                const [start, end] = token.split('..').map(cp => parseInt(cp, 16));
+                const iconCode = icon.char?.codePointAt(0);
+                return iconCode && iconCode >= start && iconCode <= end;
             }
             return (
                 icon.name?.toLowerCase().includes(token) ||

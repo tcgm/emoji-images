@@ -17,3 +17,9 @@ body {
     src: url('/fonts/OpenMoji-Black.ttf') format('truetype');
     font-display: swap;
 }
+
+@font-face {
+    font-family: 'NotoColorEmoji';
+    src: url('/fonts/NotoColorEmoji-emojicompat.ttf') format('truetype');
+    font-display: swap;
+}

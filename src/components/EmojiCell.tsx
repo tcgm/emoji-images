@@ -1,4 +1,6 @@
 import { Box, useColorModeValue, Tooltip } from "@chakra-ui/react";
+import { getFontForSource } from "../utils/fontUtils";
+import { useState } from "react";
 
 type Props = {
     char?: string;
@@ -29,6 +31,10 @@ export default function EmojiCell({
     keywords,
     source
 }: Props) {
+    const computedFontFamily = getFontForSource(source || "");
+
+    console.log("EmojiCell Debug:", { source, computedFontFamily });
+
     const borderColor = selected
         ? useColorModeValue("purple.500", "purple.300")
         : useColorModeValue("gray.200", "gray.700");
@@ -41,16 +47,25 @@ export default function EmojiCell({
             <strong>{name || filename}</strong><br />
             {type && <span>Type: {type}<br /></span>}
             {source && <span>Source: {source}<br /></span>}
+            {/* {computedFontFamily && <span>Font Family: {computedFontFamily}<br /></span>} */}
             {keywords && keywords.length > 0 && <span>Keywords: {keywords.join(", ")}<br /></span>}
             {filename && <span>File: {filename}</span>}
         </Box>
     );
+
+    const [tooltipOpen, setTooltipOpen] = useState(false);
+
+    const handleDoubleClick = () => {
+        setTooltipOpen((prev) => !prev);
+    };
+
     return (
-        <Tooltip label={tooltipLabel} placement="top" hasArrow>
+        <Tooltip label={tooltipLabel} placement="top" hasArrow isOpen={tooltipOpen || undefined} closeOnClick={false} pointerEvents="auto">
             <Box className="emoji-cell"
                 as="button"
                 title={`${char || filename} — ${filename}`}
                 onClick={onClick}
+                onDoubleClick={handleDoubleClick}
                 w={`${cellSize}px`}
                 h={`${cellSize}px`}
                 borderWidth={selected ? "2px" : "1px"}
@@ -60,7 +75,7 @@ export default function EmojiCell({
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
-                fontFamily={`"${fontFamily}", "OpenMojiBlack", sans-serif`}
+                fontFamily={computedFontFamily}
                 fontSize={`${Math.max(24, Math.round(cellSize * 0.6))}px`}
                 color={glyphColor}
                 userSelect="none"

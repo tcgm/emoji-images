@@ -1,4 +1,5 @@
 import { Box, Container, Flex, Progress } from "@chakra-ui/react";
+import LibrarySelector from "./components/LibrarySelector";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -23,17 +24,20 @@ export default function App() {
     const [allIcons] = useState(() => loadAllIcons());
 
     // Generator settings
-    const [yOffset, setYOffset] = useState(-10);
+    const [yOffset, setYOffset] = useState(-4);
     const [canvasSize, setCanvasSize] = useState(64);
     const [fontSize, setFontSize] = useState(160);
     const [glyphColor, setGlyphColor] = useState("#ffffff");
-    const fontFamily = "OpenMojiBlack";
+    const fontFamily = "'OpenMojiBlack', 'Twemoji', 'Noto Emoji', sans-serif";
 
     // Filtering
     const [query, setQuery] = useState("");
+    const [selectedLibrary, setSelectedLibrary] = useState("common");
+    // const [libraryQuery, setLibraryQuery] = useState("");
     const filtered = useMemo(() => {
-        // Use searchIcons for advanced search features
-        return query.trim() ? searchIcons(query, allIcons) : allIcons;
+        // If a library button is pressed, search for that library
+        const effectiveQuery = query;
+        return effectiveQuery.trim() ? searchIcons(effectiveQuery, allIcons) : allIcons;
     }, [allIcons, query]);
 
     // Verify all indexes in filtered are real
@@ -77,22 +81,36 @@ export default function App() {
     const previewRef = useRef<HTMLCanvasElement | null>(null);
     const ensureFont = useEnsureFont();
     const [demo, setDemo] = useState("🤒");
+    const getFontForSource = (source: string) => {
+        switch (source) {
+            case "twemoji":
+                return "Twemoji, sans-serif";
+            case "notoemoji":
+                return "Noto Emoji, sans-serif";
+            default:
+                return "OpenMojiBlack, sans-serif";
+        }
+    };
+    const ensureAllFonts = useCallback(async () => {
+        const fonts = ["OpenMojiBlack", "Twemoji", "Noto Emoji"];
+        for (const font of fonts) {
+            await ensureFont(font, fontSize);
+        }
+    }, [fontSize, ensureFont]);
     const drawPreview = useCallback(async () => {
         if (!previewRef.current) return;
         const previewFontSize = Math.round(canvasSize * 0.8);
-        // Find the demo icon in allIcons by key (filename or name)
         const icon = allIcons.find(i => (i.filename || i.name) === demo || i.char === demo);
         if (icon) {
+            const fontForIcon = getFontForSource(icon.source);
             if (icon.iconComponent) {
-                // Render SVG icon instantly
                 await drawIconToCanvas(previewRef.current, icon.iconComponent, canvasSize, glyphColor);
             } else if (icon.char) {
-                await ensureFont(fontFamily, previewFontSize);
+                await ensureFont(fontForIcon, previewFontSize);
                 drawEmojiToCanvas(
-                    previewRef.current, canvasSize, icon.char, previewFontSize, yOffset, fontFamily, glyphColor
+                    previewRef.current, canvasSize, icon.char, previewFontSize, yOffset, fontForIcon, glyphColor
                 );
             } else if (icon.filename) {
-                // If it's an image file, load and draw it
                 const ctx = previewRef.current.getContext("2d");
                 if (ctx) {
                     const img = new window.Image();
@@ -104,13 +122,12 @@ export default function App() {
                 }
             }
         } else {
-            // fallback: try to render demo as char
-            await ensureFont(fontFamily, previewFontSize);
+            await ensureFont("OpenMojiBlack", previewFontSize);
             drawEmojiToCanvas(
-                previewRef.current, canvasSize, demo, previewFontSize, yOffset, fontFamily, glyphColor
+                previewRef.current, canvasSize, demo, previewFontSize, yOffset, "OpenMojiBlack", glyphColor
             );
         }
-    }, [canvasSize, demo, ensureFont, fontFamily, glyphColor, yOffset, allIcons]);
+    }, [canvasSize, demo, ensureFont, glyphColor, yOffset, allIcons]);
     useEffect(() => { void drawPreview(); }, [drawPreview]);
 
     // Ensure demo is always valid after filtering
@@ -182,6 +199,15 @@ export default function App() {
         setDemo(filtered[Math.floor(Math.random() * filtered.length)]?.char || "");
     };
 
+    const handleLibrarySelect = (value: string) => {
+        setSelectedLibrary(value);
+        if (value === "common") {
+            setQuery(""); // Show all or a default common set if you want
+        } else {
+            setQuery(`#${value}`); // Use #source search
+        }
+    };
+
     return (
         <Box h="100vh" minH="0">
             {/*  <button style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000 }} onClick={() => setShowTest(v => !v)}>
@@ -193,7 +219,7 @@ export default function App() {
                 <Container maxW="6xl" h="100%" minH="0" py={4}>
                     <Flex direction="column" h="100%" minH="0" gap={3}>
                         <Flex gap={6} align="flex-start" flex="1" minH="0" flexWrap="nowrap" h="100%" justifyContent="space-between">
-                            <Box flexShrink={0}>
+                            <Box flexShrink={0} display="flex" flexDirection="column" gap={4} h="100%">
                                 <PreviewCard
                                     canvasRef={previewRef}
                                     version={meta?.sequencesVersion}
@@ -202,6 +228,11 @@ export default function App() {
                                     supplementCount={meta?.supplementCount}
                                     totalCount={totalCount}
                                     canvasSize={canvasSize}
+                                />
+                                {/* Library selector as button list component */}
+                                <LibrarySelector
+                                    selected={query}
+                                    setQuery={setQuery}
                                 />
                             </Box>
                             <Flex direction="column" flex="1" minH="0" minW="0" h="100%">

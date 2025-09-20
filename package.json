@@ -28,6 +28,8 @@
     "@fortawesome/free-brands-svg-icons": "^7.0.1",
     "@fortawesome/free-regular-svg-icons": "^7.0.1",
     "@fortawesome/free-solid-svg-icons": "^7.0.1",
+    "@iconify/react": "^6.0.2",
+    "@react-icons/all-files": "^4.1.0",
     "canvg": "^4.0.3",
     "framer-motion": "^12.23.12",
     "html2canvas": "^1.4.1",

@@ -12,7 +12,7 @@ export function drawEmojiToCanvas(
     const ctx = canvas.getContext("2d");
     if (!ctx) return false;
 
-    ctx.font = `${fontSize}px "${fontFamily}", "OpenMojiBlack", sans-serif`;
+    ctx.font = `${fontSize}px "${fontFamily}", sans-serif`;
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = fillStyle;
 

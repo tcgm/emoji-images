@@ -3,6 +3,7 @@ import { Box } from "@chakra-ui/react";
 import { Grid } from "react-window";
 import EmojiCell from "./EmojiCell";
 import type { IconItem } from "../utils/iconLibrary";
+import { getFontForSource } from "../utils/fontUtils"; // Adjust the import path as necessary
 
 interface EmojiGridProps {
     items: IconItem[];
@@ -52,6 +53,7 @@ function CellComponent(props: CellComponentProps) {
             iconComponent = null;
         }
     }
+    const fontForEmoji = getFontForSource(it.source || "");
     return (
         <div style={style} key={it.filename || it.name}>
             <EmojiCell
@@ -61,7 +63,7 @@ function CellComponent(props: CellComponentProps) {
                 selected={selectedSet.has(it.filename || it.name)}
                 onClick={(e) => onCellClick(idx, e)}
                 glyphColor={glyphColor}
-                fontFamily="OpenMojiBlack, system-ui, sans-serif"
+                fontFamily={fontForEmoji}
                 cellSize={cellSize}
                 name={it.name}
                 type={it.type}

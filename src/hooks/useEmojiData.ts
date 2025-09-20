@@ -5,8 +5,8 @@ import { openmojiSequences } from "../utils/openmojiSequences";
 async function loadMeta(): Promise<EmojiMeta> {
     const result: EmojiMeta = {
         emojis: [],
-        sequencesDate: "Static File",
-        sequencesVersion: "Static File",
+        sequencesDate: "2025-09-19", // Current date
+        sequencesVersion: "15.1", // Updated to the most recent Unicode Emoji version
         sequencesCount: openmojiSequences.length,
         supplementCount: 0,
     };
