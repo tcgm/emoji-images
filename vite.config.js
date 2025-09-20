@@ -8,4 +8,5 @@ export default defineConfig({
     sourcemap: true, // Enable source maps for debugging and analysis
   },
   cacheDir: '.vite-cache',
+  base: '/emoji-images/',
 })
