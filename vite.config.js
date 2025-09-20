@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: { port: 5173 },
   build: {
-    sourcemap: true, // Enable source maps for debugging and analysis
+    sourcemap: false, // Disable source maps to reduce file size
   },
   cacheDir: '.vite-cache',
   base: '/emoji-images/',
